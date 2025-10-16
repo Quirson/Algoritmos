@@ -365,7 +365,7 @@ public class AlgoritmoPrim extends Application {
                     showAlert("Erro", "O peso deve ser maior que zero!");
                 }
             } catch (NumberFormatException e) {
-                showAlert("Erro", "Digite um número válido!");
+                showAlert("Erro", "Digite um número válido! Aqui");
             }
         });
     }
