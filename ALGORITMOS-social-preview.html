@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700;800&family=Bebas+Neue&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1280px;
+    height: 640px;
+    overflow: hidden;
+    background: #04080f;
+    font-family: 'JetBrains Mono', monospace;
+    position: relative;
+  }
+
+  /* === ANIMATED GRAPH NETWORK (SVG background) === */
+  .network {
+    position: absolute;
+    inset: 0;
+    opacity: 0.55;
+  }
+
+  /* Grid */
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+
+  /* Glows */
+  .glow-tl {
+    position: absolute;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,200,255,0.1) 0%, transparent 65%);
+    top: -200px; left: -100px;
+  }
+  .glow-br {
+    position: absolute;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,100,50,0.08) 0%, transparent 65%);
+    bottom: -150px; right: 100px;
+  }
+  .glow-center {
+    position: absolute;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,245,160,0.06) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Scanlines */
+  .scanlines {
+    position: absolute; inset: 0; z-index: 20;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 3px,
+      rgba(0,0,0,0.1) 3px, rgba(0,0,0,0.1) 4px
+    );
+    pointer-events: none;
+  }
+
+  /* Corner brackets */
+  .brk { position: absolute; width: 30px; height: 30px; border-style: solid; border-color: rgba(0,200,255,0.4); }
+  .brk.tl { top: 20px; left: 20px; border-width: 2px 0 0 2px; }
+  .brk.tr { top: 20px; right: 20px; border-width: 2px 2px 0 0; border-color: rgba(255,100,50,0.4); }
+  .brk.bl { bottom: 20px; left: 20px; border-width: 0 0 2px 2px; }
+  .brk.br { bottom: 20px; right: 20px; border-width: 0 2px 2px 0; border-color: rgba(0,245,160,0.4); }
+
+  /* Top/Bottom bars */
+  .top-bar {
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(to right, transparent, rgba(0,200,255,0.5) 30%, rgba(0,200,255,0.5) 70%, transparent);
+  }
+  .bottom-bar {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(to right,
+      transparent,
+      #00c8ff 20%, #00f5a0 40%,
+      rgba(0,245,160,0.3) 50%,
+      rgba(255,100,50,0.3) 60%,
+      #ff6432 80%,
+      transparent);
+  }
+
+  /* === LEFT: TITLE BLOCK === */
+  .left {
+    position: absolute;
+    left: 90px; top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+  }
+
+  .tag {
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: #00c8ff;
+    text-transform: uppercase;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 18px;
+  }
+  .tag::before { content: ''; display: block; width: 20px; height: 1px; background: #00c8ff; }
+
+  .big-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 104px;
+    line-height: 0.88;
+    letter-spacing: 3px;
+    margin-bottom: 24px;
+  }
+  .big-title .t1 { display: block; color: #ffffff; text-shadow: 0 0 40px rgba(0,200,255,0.2); }
+  .big-title .t2 { display: block; color: transparent; -webkit-text-stroke: 1.5px rgba(255,255,255,0.2); }
+  .big-title .t3 { display: block; color: #00c8ff; text-shadow: 0 0 30px rgba(0,200,255,0.5); }
+
+  .algo-pills {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    max-width: 520px;
+  }
+  .ap {
+    padding: 5px 13px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    border: 1px solid;
+  }
+  .ap.cyan   { color: #00c8ff; border-color: rgba(0,200,255,0.3); background: rgba(0,200,255,0.07); }
+  .ap.green  { color: #00f5a0; border-color: rgba(0,245,160,0.3); background: rgba(0,245,160,0.07); }
+  .ap.orange { color: #ff9050; border-color: rgba(255,144,80,0.3); background: rgba(255,144,80,0.07); }
+  .ap.purple { color: #b088ff; border-color: rgba(176,136,255,0.3); background: rgba(176,136,255,0.07); }
+
+  .meta-row {
+    margin-top: 20px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 1px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .meta-row span { display: flex; align-items: center; gap: 6px; }
+  .meta-dot { width: 6px; height: 6px; border-radius: 50%; background: #00f5a0; box-shadow: 0 0 8px #00f5a0; }
+
+  /* === RIGHT: GRAPH VISUALIZATION === */
+  .graph-panel {
+    position: absolute;
+    right: 60px; top: 50%;
+    transform: translateY(-50%);
+    width: 340px; height: 380px;
+    z-index: 10;
+  }
+
+  .graph-panel svg {
+    width: 100%; height: 100%;
+    overflow: visible;
+  }
+
+  /* Node labels */
+  .node-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    fill: #ffffff;
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+
+  .edge-weight {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    fill: rgba(255,255,255,0.45);
+    text-anchor: middle;
+  }
+
+  /* Panel label */
+  .panel-tag {
+    position: absolute;
+    top: -28px; left: 0;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: rgba(0,200,255,0.5);
+    text-transform: uppercase;
+  }
+
+  /* Kruskal/Prim labels */
+  .algo-label {
+    position: absolute;
+    bottom: -36px; right: 0;
+    font-size: 10px;
+    color: rgba(255,255,255,0.2);
+    letter-spacing: 2px;
+  }
+
+</style>
+</head>
+<body>
+
+  <div class="grid"></div>
+  <div class="glow-tl"></div>
+  <div class="glow-br"></div>
+  <div class="glow-center"></div>
+  <div class="scanlines"></div>
+  <div class="top-bar"></div>
+  <div class="bottom-bar"></div>
+  <div class="brk tl"></div>
+  <div class="brk tr"></div>
+  <div class="brk bl"></div>
+  <div class="brk br"></div>
+
+  <!-- LEFT BLOCK -->
+  <div class="left">
+    <div class="tag">Graph Algorithms · Java · ISCTEM</div>
+    <div class="big-title">
+      <span class="t1">GRAPH</span>
+      <span class="t2">ALGO</span>
+      <span class="t3">RITHMS</span>
+    </div>
+    <div class="algo-pills">
+      <span class="ap cyan">Kruskal</span>
+      <span class="ap green">Prim</span>
+      <span class="ap orange">Dijkstra</span>
+      <span class="ap purple">BFS / DFS</span>
+      <span class="ap cyan">Bellman-Ford</span>
+      <span class="ap green">Floyd-Warshall</span>
+      <span class="ap orange">MST</span>
+      <span class="ap purple">Greedy</span>
+    </div>
+    <div class="meta-row">
+      <span><div class="meta-dot"></div> Quirson Fernando Ngale</span>
+      <span>· ISCTEM · Java</span>
+    </div>
+  </div>
+
+  <!-- RIGHT: GRAPH SVG -->
+  <div class="graph-panel">
+    <span class="panel-tag">// mst_visualization.graph</span>
+    <svg viewBox="0 0 340 380">
+      <defs>
+        <!-- Node glow filters -->
+        <filter id="glow-cyan">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-green">
+          <feGaussianBlur stdDeviation="5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-orange">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <!-- MST edge glow -->
+        <filter id="edge-glow">
+          <feGaussianBlur stdDeviation="2.5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- ===== NON-MST EDGES (dim) ===== -->
+      <!-- A-C -->
+      <line x1="80" y1="80" x2="260" y2="80" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" stroke-dasharray="4,4"/>
+      <text x="170" y="68" class="edge-weight">8</text>
+      <!-- A-D -->
+      <line x1="80" y1="80" x2="80" y2="300" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" stroke-dasharray="4,4"/>
+      <text x="64" y="195" class="edge-weight">7</text>
+      <!-- B-E -->
+      <line x1="260" y1="190" x2="260" y2="300" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" stroke-dasharray="4,4"/>
+      <text x="272" y="248" class="edge-weight">5</text>
+      <!-- D-E -->
+      <line x1="80" y1="300" x2="260" y2="300" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" stroke-dasharray="4,4"/>
+      <text x="170" y="318" class="edge-weight">9</text>
+      <!-- C-E -->
+      <line x1="260" y1="80" x2="260" y2="300" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" stroke-dasharray="4,4"/>
+      <text x="277" y="195" class="edge-weight">6</text>
+
+      <!-- ===== MST EDGES (bright — Kruskal result) ===== -->
+      <!-- A-B weight 4 -->
+      <line x1="80" y1="80" x2="260" y2="190" stroke="#00c8ff" stroke-width="2.5" filter="url(#edge-glow)" opacity="0.9"/>
+      <text x="162" y="126" class="edge-weight" fill="#00c8ff" style="font-size:11px;font-weight:700;">4</text>
+
+      <!-- B-C weight 2 -->
+      <line x1="260" y1="190" x2="260" y2="80" stroke="#00f5a0" stroke-width="2.5" filter="url(#edge-glow)" opacity="0.9"/>
+      <text x="278" y="138" class="edge-weight" fill="#00f5a0" style="font-size:11px;font-weight:700;">2</text>
+
+      <!-- A-D weight 3 (via center)  — reuse as B-D -->
+      <line x1="260" y1="190" x2="80" y2="300" stroke="#00c8ff" stroke-width="2.5" filter="url(#edge-glow)" opacity="0.7"/>
+      <text x="162" y="252" class="edge-weight" fill="#00c8ff" style="font-size:11px;font-weight:700;">3</text>
+
+      <!-- D-E weight 1 -->
+      <line x1="80" y1="300" x2="170" y2="190" stroke="#ff9050" stroke-width="2.5" filter="url(#edge-glow)" opacity="0.9"/>
+      <text x="116" y="238" class="edge-weight" fill="#ff9050" style="font-size:11px;font-weight:700;">1</text>
+
+      <!-- Center node to E -->
+      <line x1="170" y1="190" x2="260" y2="300" stroke="#b088ff" stroke-width="2" filter="url(#edge-glow)" opacity="0.7"/>
+      <text x="218" y="256" class="edge-weight" fill="#b088ff" style="font-size:11px;font-weight:700;">5</text>
+
+      <!-- ===== NODES ===== -->
+      <!-- Node A -->
+      <circle cx="80" cy="80" r="22" fill="#04080f" stroke="#00c8ff" stroke-width="2" filter="url(#glow-cyan)"/>
+      <circle cx="80" cy="80" r="16" fill="rgba(0,200,255,0.12)"/>
+      <text x="80" y="80" class="node-label" fill="#00c8ff">A</text>
+
+      <!-- Node C -->
+      <circle cx="260" cy="80" r="22" fill="#04080f" stroke="#00f5a0" stroke-width="2" filter="url(#glow-green)"/>
+      <circle cx="260" cy="80" r="16" fill="rgba(0,245,160,0.12)"/>
+      <text x="260" y="80" class="node-label" fill="#00f5a0">C</text>
+
+      <!-- Node B (center-right) -->
+      <circle cx="260" cy="190" r="26" fill="#04080f" stroke="#00c8ff" stroke-width="2.5" filter="url(#glow-cyan)"/>
+      <circle cx="260" cy="190" r="18" fill="rgba(0,200,255,0.15)"/>
+      <text x="260" y="190" class="node-label" fill="#00c8ff">B</text>
+
+      <!-- Center node -->
+      <circle cx="170" cy="190" r="30" fill="#04080f" stroke="#ff9050" stroke-width="3" filter="url(#glow-orange)"/>
+      <circle cx="170" cy="190" r="20" fill="rgba(255,144,80,0.12)"/>
+      <text x="170" y="190" class="node-label" fill="#ff9050">MST</text>
+
+      <!-- Node D -->
+      <circle cx="80" cy="300" r="22" fill="#04080f" stroke="#b088ff" stroke-width="2" filter="url(#glow-green)"/>
+      <circle cx="80" cy="300" r="16" fill="rgba(176,136,255,0.12)"/>
+      <text x="80" y="300" class="node-label" fill="#b088ff">D</text>
+
+      <!-- Node E -->
+      <circle cx="260" cy="300" r="22" fill="#04080f" stroke="#00f5a0" stroke-width="2" filter="url(#glow-green)"/>
+      <circle cx="260" cy="300" r="16" fill="rgba(0,245,160,0.12)"/>
+      <text x="260" y="300" class="node-label" fill="#00f5a0">E</text>
+    </svg>
+    <span class="algo-label">Minimum Spanning Tree · Kruskal / Prim</span>
+  </div>
+
+  <!-- NETWORK DOTS in background -->
+  <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:1;opacity:0.15" viewBox="0 0 1280 640">
+    <!-- Small background graph nodes -->
+    <circle cx="400" cy="120" r="3" fill="#00c8ff"/>
+    <circle cx="500" cy="200" r="3" fill="#00c8ff"/>
+    <circle cx="450" cy="320" r="3" fill="#00c8ff"/>
+    <circle cx="600" cy="150" r="3" fill="#00c8ff"/>
+    <circle cx="550" cy="400" r="3" fill="#00c8ff"/>
+    <circle cx="650" cy="280" r="3" fill="#00c8ff"/>
+    <line x1="400" y1="120" x2="500" y2="200" stroke="#00c8ff" stroke-width="1"/>
+    <line x1="500" y1="200" x2="450" y2="320" stroke="#00c8ff" stroke-width="1"/>
+    <line x1="500" y1="200" x2="600" y2="150" stroke="#00c8ff" stroke-width="1"/>
+    <line x1="600" y1="150" x2="650" y2="280" stroke="#00c8ff" stroke-width="1"/>
+    <line x1="650" y1="280" x2="550" y2="400" stroke="#00c8ff" stroke-width="1"/>
+    <line x1="450" y1="320" x2="550" y2="400" stroke="#00c8ff" stroke-width="1"/>
+  </svg>
+
+</body>
+</html>
